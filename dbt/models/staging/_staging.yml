@@ -1,0 +1,36 @@
+version: 2
+models:
+- name: stg_bronze__sites
+  columns:
+  - name: site_id
+    data_tests:
+    - unique
+    - not_null
+- name: stg_bronze__devices
+  columns:
+  - name: device_id
+    data_tests:
+    - unique
+    - not_null
+  - name: site_id
+    data_tests:
+    - not_null
+    - relationships:
+        arguments:
+          to: ref('stg_bronze__sites')
+          field: site_id
+- name: stg_bronze__device_days
+  data_tests:
+  - unique_combination:
+      arguments:
+        columns:
+        - device_id
+        - status_date
+  columns:
+  - name: device_id
+    data_tests:
+    - not_null
+    - relationships:
+        arguments:
+          to: ref('stg_bronze__devices')
+          field: device_id

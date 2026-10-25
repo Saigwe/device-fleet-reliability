@@ -1,0 +1,11 @@
+version: 2
+models:
+  - name: fct_device_day
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: [device_id, status_date]
+  - name: rpt_failure_rate_by_model
+    columns:
+      - name: model
+        data_tests: [unique, not_null]
