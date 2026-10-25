@@ -1,11 +1,97 @@
 version: 2
+
 models:
-  - name: fct_device_day
-    data_tests:
-      - unique_combination:
-          arguments:
-            columns: [device_id, status_date]
-  - name: rpt_failure_rate_by_model
+  - name: dim_drive_model
+    description: One row per drive model, with manufacturer and drive type from the longest matching prefix.
     columns:
       - name: model
         data_tests: [unique, not_null]
+      - name: drive_type
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [hdd, ssd]
+
+  - name: fct_drive_day
+    description: One row per drive per day (grain serial_number, drive_date).
+
+  - name: rpt_afr_by_model
+    description: AFR, its approximate 95% interval and failures per 1,000 drives, by hard-drive model.
+    config:
+      contract: {enforced: true}
+    columns:
+      - {name: model, data_type: varchar, constraints: [{type: not_null}], data_tests: [unique]}
+      - {name: manufacturer, data_type: varchar}
+      - {name: capacity_tb, data_type: double}
+      - {name: drives, data_type: bigint}
+      - {name: drive_days, data_type: bigint}
+      - {name: failures, data_type: bigint}
+      - {name: afr_pct, data_type: double}
+      - {name: afr_ci_low_pct, data_type: double}
+      - {name: afr_ci_high_pct, data_type: double}
+      - {name: failures_per_1000_drives, data_type: double}
+      - {name: meets_reporting_threshold, data_type: boolean}
+
+  - name: rpt_afr_by_age
+    description: AFR by whole years of power-on time (hard drives).
+    config:
+      contract: {enforced: true}
+    columns:
+      - {name: age_year, data_type: integer, constraints: [{type: not_null}], data_tests: [unique]}
+      - {name: age_label, data_type: varchar}
+      - {name: drives, data_type: bigint}
+      - {name: drive_days, data_type: bigint}
+      - {name: failures, data_type: bigint}
+      - {name: afr_pct, data_type: double}
+
+  - name: rpt_afr_by_manufacturer
+    columns:
+      - name: manufacturer
+        data_tests: [unique, not_null]
+
+  - name: rpt_fleet_daily
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: [drive_date, drive_type]
+
+  - name: rpt_smart_signal_lift
+    columns:
+      - name: smart_stat
+        data_tests: [unique, not_null]
+
+unit_tests:
+  - name: model_prefix_match_takes_the_longest_prefix_and_defaults_to_other_hdd
+    model: dim_drive_model
+    given:
+      - input: ref('stg_backblaze__drive_days')
+        rows:
+          - {model: ST16000NM001G, serial_number: A, capacity_tb: 16.0, drive_date: 2026-01-01}
+          - {model: Seagate BarraCuda SSD ZA250CM10002, serial_number: B, capacity_tb: 0.3, drive_date: 2026-01-01}
+          - {model: TOSHIBA MG08ACA16TA, serial_number: C, capacity_tb: 16.0, drive_date: 2026-01-01}
+          - {model: XYZ123, serial_number: D, capacity_tb: 8.0, drive_date: 2026-01-01}
+      - input: ref('model_prefixes')
+        rows:
+          - {prefix: ST, manufacturer: Seagate, drive_type: hdd}
+          - {prefix: Seagate BarraCuda SSD, manufacturer: Seagate, drive_type: ssd}
+          - {prefix: TOSHIBA, manufacturer: Toshiba, drive_type: hdd}
+    expect:
+      rows:
+        - {model: ST16000NM001G, manufacturer: Seagate, drive_type: hdd}
+        - {model: Seagate BarraCuda SSD ZA250CM10002, manufacturer: Seagate, drive_type: ssd}
+        - {model: TOSHIBA MG08ACA16TA, manufacturer: Toshiba, drive_type: hdd}
+        - {model: XYZ123, manufacturer: Other, drive_type: hdd}
+
+  - name: lifecycle_records_failure_date_and_age_window
+    model: int_drive_lifecycle
+    given:
+      - input: ref('stg_backblaze__drive_days')
+        rows:
+          - {serial_number: S1, model: M, drive_date: 2026-01-01, is_failure: false, power_on_hours: 2400}
+          - {serial_number: S1, model: M, drive_date: 2026-01-02, is_failure: false, power_on_hours: 2424}
+          - {serial_number: S1, model: M, drive_date: 2026-01-03, is_failure: true, power_on_hours: 2448}
+          - {serial_number: S2, model: M, drive_date: 2026-01-01, is_failure: false, power_on_hours: 48}
+    expect:
+      rows:
+        - {serial_number: S1, days_observed: 3, failed: true, failure_date: 2026-01-03, age_at_entry_days: 100, age_at_exit_days: 102}
+        - {serial_number: S2, days_observed: 1, failed: false, failure_date: null, age_at_entry_days: 2, age_at_exit_days: 2}

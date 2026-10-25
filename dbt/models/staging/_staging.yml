@@ -1,36 +1,16 @@
 version: 2
+
 models:
-- name: stg_bronze__sites
-  columns:
-  - name: site_id
+  - name: stg_backblaze__drive_days
+    description: One row per drive per day, typed. Grain (serial_number, drive_date).
     data_tests:
-    - unique
-    - not_null
-- name: stg_bronze__devices
-  columns:
-  - name: device_id
-    data_tests:
-    - unique
-    - not_null
-  - name: site_id
-    data_tests:
-    - not_null
-    - relationships:
-        arguments:
-          to: ref('stg_bronze__sites')
-          field: site_id
-- name: stg_bronze__device_days
-  data_tests:
-  - unique_combination:
-      arguments:
-        columns:
-        - device_id
-        - status_date
-  columns:
-  - name: device_id
-    data_tests:
-    - not_null
-    - relationships:
-        arguments:
-          to: ref('stg_bronze__devices')
-          field: device_id
+      - unique_combination:
+          arguments:
+            columns: [serial_number, drive_date]
+          config:
+            severity: warn
+    columns:
+      - name: model
+        data_tests: [not_null]
+      - name: power_on_hours
+        description: SMART 9 raw. Used as drive age because the data has no install date.

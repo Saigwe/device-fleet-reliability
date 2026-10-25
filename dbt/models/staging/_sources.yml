@@ -1,8 +1,15 @@
 version: 2
+
 sources:
-- name: bronze
-  description: Raw tables, loaded by the fixture generator (CI) or the real-data loaders.
-  tables:
-  - name: sites
-  - name: devices
-  - name: device_days
+  - name: bronze
+    description: Backblaze Drive Stats daily rows (ingestion/load_backblaze.py), or the CI fixture in the same format.
+    meta:
+      owner: reliability-analytics
+      upstream: https://www.backblaze.com/cloud-storage/resources/hard-drive-test-data
+    tables:
+      - name: drive_days
+        description: One row per drive per day in service. failure = 1 on a failed drive's last day.
+        columns:
+          - name: serial_number
+            description: Manufacturer serial number. An equipment identifier, not personal data.
+            meta: {classification: internal, pii: false}

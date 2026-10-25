@@ -1,5 +1,10 @@
-# Ingestion (roadmap)
+# Ingestion
 
-Loaders for the real data go here and write to the same `bronze` tables as the fixture.
+`load_backblaze.py` loads [Backblaze Drive Stats](https://www.backblaze.com/cloud-storage/resources/hard-drive-test-data) daily CSVs into `bronze.drive_days`:
+- it extracts the quarterly zip if needed
+- it reads every daily file with DuckDB (`union_by_name`, so header differences across quarters are tolerated)
+- it keeps only the 15 columns this project uses
 
-Real data: [Backblaze hard-drive test data](https://www.backblaze.com/cloud-storage/resources/hard-drive-test-data), with daily status for 300k+ drives and a failure flag. Load part into Postgres and part into MongoDB to mirror mixed sources. CI uses a small synthetic fleet with the same shape.
+`make download` fetches a quarter from Backblaze's public bucket (`QUARTER=Q1_2026` by default, 1.31 GB). The raw files are gitignored.
+
+CI never downloads anything. It writes Backblaze-format CSVs with `tests/fixtures/make_backblaze_fixture.py` and runs the same loader on them.

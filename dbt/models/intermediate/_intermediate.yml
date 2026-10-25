@@ -1,0 +1,8 @@
+version: 2
+
+models:
+  - name: int_drive_lifecycle
+    description: One row per drive with its observation window, age at entry and exit, and failure.
+    columns:
+      - name: serial_number
+        data_tests: [unique, not_null]

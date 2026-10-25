@@ -1,0 +1,18 @@
+prefix,manufacturer,drive_type
+ST,Seagate,hdd
+Seagate BarraCuda,Seagate,ssd
+Seagate FireCuda,Seagate,ssd
+Seagate IronWolf ZA,Seagate,ssd
+Seagate SSD,Seagate,ssd
+TOSHIBA,Toshiba,hdd
+HGST,HGST,hdd
+WDC,WDC,hdd
+WUH,WDC,hdd
+WDC WDS,WDC,ssd
+WD Blue SA,WDC,ssd
+CT,Crucial,ssd
+Micron,Micron,ssd
+MTFD,Micron,ssd
+DELLBOSS,Dell,ssd
+SSDSC,Intel,ssd
+Samsung SSD,Samsung,ssd
