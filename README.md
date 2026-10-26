@@ -147,6 +147,7 @@ make fixture-all    # Backblaze-format fixture, no download (CI)
 - [ ] Mixed-source ingestion as at work: part of the data in Postgres and MongoDB, ingested with dlt (needs Docker, which isn't on my build machine)
 - [ ] OpenMetadata catalogue and an Evidence.dev reliability dashboard
 - [ ] Design doc and a 3-minute walkthrough
+- [ ] 3-minute Loom walkthrough ([script ready](docs/walkthrough.md))
 
 ## Interview topics this project prepares
 - Normalised failure metrics and choosing the right denominator
